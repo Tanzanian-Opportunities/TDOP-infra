@@ -1,0 +1,78 @@
+version: "3.8"
+
+services:
+  tdop-postgres:
+    image: postgres:16-alpine
+    container_name: tdop-postgres
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    volumes:
+      - tdop-postgres-data:/var/lib/postgresql/data
+      - ./init:/docker-entrypoint-initdb.d
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-tdop}
+      POSTGRES_USER: ${POSTGRES_USER:-tdop}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in TDOP-infra/.env}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U tdop -d tdop"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - tdop-network
+
+  tdop-backend:
+    build:
+      context: ../TDOP-backend
+      dockerfile: Dockerfile
+    container_name: tdop-backend
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://tdop-postgres:5432/${POSTGRES_DB:-tdop}
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-tdop}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in TDOP-infra/.env}
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT: org.hibernate.dialect.PostgreSQLDialect
+      SPRING_DATASOURCE_HIKARI_CONNECTION-TIMEOUT: 30000
+      SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE: 10
+      SPRING_DATASOURCE_HIKARI_MINIMUM_IDLE: 5
+      SPRING_JPA_SHOW_SQL: "true"
+      SPRING_JPA_PROPERTIES_FORMAT_SQL: "true"
+      MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: "*"
+      MANAGEMENT_ENDPOINT_HEALTH_SHOW_DETAILS: "always"
+      JAVA_OPTS: "-Xms512m -Xmx1024m"
+    depends_on:
+      tdop-postgres:
+        condition: service_healthy
+    networks:
+      - tdop-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+  tdop-adminer:
+    image: adminer:latest
+    container_name: tdop-adminer
+    restart: unless-stopped
+    ports:
+      - "8081:8080"
+    environment:
+      ADMINER_DEFAULT_SERVER: tdop-postgres
+    depends_on:
+      - tdop-postgres
+    networks:
+      - tdop-network
+
+volumes:
+  tdop-postgres-data:
+    driver: local
+
+networks:
+  tdop-network:
+    driver: bridge

@@ -1,0 +1,61 @@
+version: "3.8"
+
+services:
+  tdop-backend:
+    build:
+      context: ../TDOP-backend
+      dockerfile: Dockerfile
+    container_name: tdop-backend-dev
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://tdop-postgres:5432/${POSTGRES_DB:-tdop}
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-tdop}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in TDOP-infra/.env}
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT: org.hibernate.dialect.PostgreSQLDialect
+      SPRING_DATASOURCE_HIKARI_CONNECTION-TIMEOUT: 30000
+      SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE: 10
+      SPRING_DATASOURCE_HIKARI_MINIMUM_IDLE: 5
+      SPRING_JPA_SHOW_SQL: "true"
+      SPRING_JPA_PROPERTIES_FORMAT_SQL: "true"
+      MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: "*"
+      MANAGEMENT_ENDPOINT_HEALTH_SHOW_DETAILS: "always"
+      JAVA_OPTS: "-Xms256m -Xmx512m"
+      SPRING_PROFILES_ACTIVE: dev
+    depends_on:
+      tdop-postgres:
+        condition: service_healthy
+    volumes:
+      - ../TDOP-backend/src:/app/src
+      - ../TDOP-backend/pom.xml:/app/pom.xml
+      - tdop-maven-cache:/root/.m2
+    networks:
+      - tdop-network
+
+  tdop-postgres:
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-tdop}
+      POSTGRES_USER: ${POSTGRES_USER:-tdop}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in TDOP-infra/.env}
+    volumes:
+      - tdop-postgres-data:/var/lib/postgresql/data
+    networks:
+      - tdop-network
+
+  tdop-adminer:
+    ports:
+      - "8081:8080"
+    networks:
+      - tdop-network
+
+volumes:
+  tdop-postgres-data:
+    driver: local
+  tdop-maven-cache:
+    driver: local
+
+networks:
+  tdop-network:
+    driver: bridge
