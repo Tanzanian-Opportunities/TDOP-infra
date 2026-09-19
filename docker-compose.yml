@@ -70,6 +70,20 @@ services:
     networks:
       - tdop-network
 
+  tdop-frontend:
+    build:
+      context: ../TDOP-frontend
+      dockerfile: Dockerfile
+    container_name: tdop-frontend
+    restart: unless-stopped
+    ports:
+      - "3000:80"
+    depends_on:
+      tdop-backend:
+        condition: service_healthy
+    networks:
+      - tdop-network
+
 volumes:
   tdop-postgres-data:
     driver: local
