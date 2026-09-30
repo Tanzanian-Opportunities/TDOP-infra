@@ -110,5 +110,5 @@ MIT - see [`LICENSE`](https://github.com/Tanzanian-Opportunities/TDOP-docs/blob/
 - [TDOP Docs](https://github.com/Tanzanian-Opportunities/TDOP-docs) — governance, specs, project management
 - [TDOP Backend](https://github.com/Tanzanian-Opportunities/TDOP-backend) — Spring Boot REST API + Nginx edge config
 - [TDOP Frontend](https://github.com/Tanzanian-Opportunities/TDOP-frontend) — React SPA
-- [Umbrella index](https://github.com/Tanzanian-Opportunities/Tanzanian_Opportunities) — full project overview
+- [Project overview](https://github.com/Tanzanian-Opportunities/TDOP-docs/blob/develop/PROJECT_OVERVIEW.md) - repository map, stack, quick start
 - [Kanban board](https://github.com/orgs/Tanzanian-Opportunities/projects/1) — task tracking
