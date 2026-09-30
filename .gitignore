@@ -1,0 +1,10 @@
+# Local environment values - never commit
+.env
+*.local
+
+# Local override compose files
+docker-compose.override.yml
+
+# OS noise
+.DS_Store
+Thumbs.db
