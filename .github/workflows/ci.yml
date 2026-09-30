@@ -9,6 +9,10 @@ on:
 jobs:
   compose-validation:
     runs-on: ubuntu-latest
+    env:
+      # CI-only placeholders so `${VAR:?}` interpolation resolves; never real secrets.
+      POSTGRES_PASSWORD: ci-placeholder-not-a-real-secret
+      JWT_SECRET: ci-placeholder-not-a-real-secret
     steps:
       - uses: actions/checkout@v4
       - name: Validate Compose configuration
